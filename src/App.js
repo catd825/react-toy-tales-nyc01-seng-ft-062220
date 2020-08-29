@@ -5,12 +5,13 @@ import Header from './components/Header'
 import ToyForm from './components/ToyForm'
 import ToyContainer from './components/ToyContainer'
 
-import data from './data'
+// import toyData from './data'
 
 
 class App extends React.Component{
 
   state = {
+    toyData: [],
     display: false
   }
 
@@ -21,20 +22,47 @@ class App extends React.Component{
     })
   }
 
+  componentDidMount(){
+    console.log(this.state, "mounted")
+    fetch("http://localhost:3000/toys")
+    .then(response => response.json())
+    .then(toyData => this.setState({toyData: toyData}))
+  }
+  
+
+  submitHandler = (newToy) => {
+    let newToyList = [...this.state.toyData, newToy]
+
+    const configObj = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(newToy)
+    }
+
+    fetch("http://localhost:3000/toys", configObj)
+    .then(response => response.json())
+    .then(toys => this.setState({toyData: newToyList}, () => console.log(this.state)))
+  }
+
+
   render(){
+    console.log("render app", this.state)
     return (
       <>
         <Header/>
         { this.state.display
             ?
-          <ToyForm/>
+          <ToyForm submitHandler={this.submitHandler} />
             :
           null
         }
         <div className="buttonContainer">
           <button onClick={this.handleClick}> Add a Toy </button>
         </div>
-        <ToyContainer/>
+        <ToyContainer toyArray={this.state.toyData} />
       </>
     );
   }
