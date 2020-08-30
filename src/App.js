@@ -31,8 +31,6 @@ class App extends React.Component{
   
 
   submitHandler = (newToy) => {
-    let newToyList = [...this.state.toyData, newToy]
-
     const configObj = {
       method: 'POST',
       headers: {
@@ -44,7 +42,53 @@ class App extends React.Component{
 
     fetch("http://localhost:3000/toys", configObj)
     .then(response => response.json())
-    .then(toys => this.setState({toyData: newToyList}, () => console.log(this.state)))
+    .then(newToy => this.setState({toyData: [...this.state.toyData, newToy]}, () => console.log(this.state)))
+  }
+
+  deleteHandler = (id) => {
+    let toyUrl = "http://localhost:3000/toys/"
+    let newToyArray = this.state.toyData.filter(toy => {
+        return toy.id !== id
+    })
+
+    this.setState({toyData: newToyArray})
+
+    const configObj = {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    }
+
+    fetch(toyUrl + id, configObj)
+    .then(response => response.json())
+
+  }
+
+
+  likeHandler = (likedObj) => {
+
+    let id = likedObj.id
+    let newLikes = likedObj.likes + 1
+
+    const configObj = {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({likes: newLikes})
+    }
+
+    fetch(`http://localhost:3000/toys/${id}`, configObj)
+    .then(response => response.json())
+    .then(updatedObj => {
+      let newArray = [...this.state.toyData]
+      let toy = newArray.find(toyObj => toyObj.id === updatedObj.id)
+      toy.likes = newLikes
+      this.setState({toyData: newArray})
+    })
   }
 
 
@@ -62,7 +106,7 @@ class App extends React.Component{
         <div className="buttonContainer">
           <button onClick={this.handleClick}> Add a Toy </button>
         </div>
-        <ToyContainer toyArray={this.state.toyData} />
+        <ToyContainer toyArray={this.state.toyData} deleteHandler={this.deleteHandler} likeHandler={this.likeHandler} />
       </>
     );
   }
